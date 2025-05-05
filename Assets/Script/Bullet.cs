@@ -57,7 +57,7 @@ public class Bullet : MonoBehaviour
 
     Vector2 Projectile(float time)
     {
-        float vectorX = velocity.x;
+        float vectorX = velocity.x * time;
         float vectorY = velocity.y - Mathf.Abs(Physics2D.gravity.y) * time;
         return new Vector2(vectorX, vectorY);
     }
