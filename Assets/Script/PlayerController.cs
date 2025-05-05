@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int shootmultiple;
 
     [SerializeField] private LineRenderer lineRenderer;
-    [SerializeField] private float aimLineMaxLengthMultiple = 1.5f;
+    [SerializeField] private float aimLineMaxLengthMultiple = 0.1f;
     
     [SerializeField] GameObject bullet;
     [SerializeField] Transform shootTransform;
@@ -81,26 +81,22 @@ public class PlayerController : MonoBehaviour
         CameraController.instance.SetTargetWithProjectileZoom(bulletScript.transform);
         hasShootThisTurn = true;
     }
-    void DrawLine(Vector2 lanchVec)
+    void DrawLine(Vector2 currentShootVelocity)
     {
-        List<Vector3> points = new List<Vector3>();
-        float time = 0f;
-        Vector3 startPoint = Vector3.zero;
-        for (int i = 0; i < pointNum; i++)
-        {
-            float x = lanchVec.x * time;
-            float y = lanchVec.y - Mathf.Abs(Physics2D.gravity.y) * time;
-            points.Add(startPoint + new Vector3(x, y, 0f));
-            time += pointTime;
-        }
-        lineRenderer.positionCount = points.Count;
-        lineRenderer.SetPositions(points.ToArray());
+        Vector3 startPoint = shootTransform.position;
+        float lineLength = (currentShootVelocity.magnitude / maxShootPower) * (maxShootPower * aimLineMaxLengthMultiple); 
+        lineLength = Mathf.Clamp(lineLength, 0, maxShootPower * aimLineMaxLengthMultiple); 
+        Vector3 dir = currentShootVelocity.normalized;
+
+        Vector3 endPoint = startPoint + dir * lineLength;
+        lineRenderer.SetPosition(0, startPoint);
+        lineRenderer.SetPosition(1, endPoint);
     }
     void UIUpdate(float shootVector, float currentangle)
     {
         float powerCal = Mathf.Clamp01(shootVector/maxShootPower) * 100;
-        powerText.text = powerCal.ToString();
-        angleText.text = currentangle.ToString();
+        powerText.text = "Power: " + powerCal.ToString();
+        angleText.text = "Angle: " + currentangle.ToString();
     }
     public void SetMyTurn(bool isMyTurn)
     {
