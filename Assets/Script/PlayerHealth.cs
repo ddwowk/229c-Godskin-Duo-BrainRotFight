@@ -13,6 +13,9 @@ public class PlayerHealth : MonoBehaviour
     public float delayBeforeDestroy = 2f;
     public float knockbackForce = 1f;
     [SerializeField] GameObject winCanvas,player1,player2;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip hitSound;
+    [SerializeField] private AudioClip deathSound;
     private bool isDead = false;
     private Rigidbody2D rb;
 
@@ -20,6 +23,7 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         rb = GetComponent<Rigidbody2D>();
+        audioSource = GetComponent<AudioSource>();
         UpdateHealthUI();
     }
 
@@ -32,6 +36,13 @@ public class PlayerHealth : MonoBehaviour
         Destroy(bloodClone.gameObject ,1);
         currentHealth -= damageToTake;
         currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+
+        // Play hit sound
+        if (audioSource != null && hitSound != null)
+        {
+            audioSource.clip = hitSound;
+            audioSource.Play();
+        }
 
         UpdateHealthUI();
 
@@ -60,31 +71,43 @@ public class PlayerHealth : MonoBehaviour
     }
 
     void Die()
+{
+    if (isDead) return; // Added check to prevent multiple Die() calls
+    isDead = true;
+
+    // Play death sound at current position
+    if (deathSound != null)
     {
-        isDead = true;
-        if(gameObject.name == "Player1 (1)")
-        {
-            player2.SetActive(true);
-        }
-        else if (gameObject.name == "Player2 (1)")
-        {
-            player1.SetActive(true);
-        }
-        winCanvas.SetActive(true);
-        PlayerController controller = GetComponent<PlayerController>();
-        if (controller != null) controller.enabled = false;
-
-        Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
-        foreach (Collider2D col in colliders) col.enabled = false;
-
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-            rb.simulated = true;
-        }
-
-        gameObject.SetActive(false);
+        AudioSource.PlayClipAtPoint(deathSound, transform.position);
+         Debug.Log($"Played death sound for {gameObject.name}"); // Confirm sound play
     }
+
+    // Notify GameManager about player death and handle win UI
+    if (GameMenager.instance != null)
+    {
+        Debug.Log($"PlayerHealth ({gameObject.name}): Calling HandlePlayerDeath."); // <-- ADD THIS LOG
+        GameMenager.instance.HandlePlayerDeath(gameObject.name, winCanvas, player1, player2, transform.position);
+    }
+    else
+    {
+         Debug.LogError($"PlayerHealth ({gameObject.name}): GameMenager.instance is NULL!"); // <-- ADD THIS CHECK
+    }
+
+    // ... (rest of Die method: disable components, SetActive(false)) ...
+     PlayerController controller = GetComponent<PlayerController>();
+    if (controller != null) controller.enabled = false;
+
+    Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
+    foreach (Collider2D col in colliders) col.enabled = false;
+
+    if (rb != null)
+    {
+        rb.linearVelocity = Vector2.zero; // Use velocity
+        rb.angularVelocity = 0f;
+        //rb.simulated = false; // Consider if physics should stop
+    }
+
+    gameObject.SetActive(false);
+}
 
 }

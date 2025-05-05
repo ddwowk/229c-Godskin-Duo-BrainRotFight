@@ -17,14 +17,21 @@ public class PlayerController : MonoBehaviour
     
     [SerializeField] GameObject bullet;
     [SerializeField] Transform shootTransform;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip player1AimSound;
+    [SerializeField] private AudioClip player2AimSound;
+
     private bool hasShootThisTurn;
     private bool isAiming;
     private bool isMyTurn;
+    private bool isPlayer1;
 
     private void Awake()
     {
         lineRenderer.enabled = false;
         playerUI.SetActive(false);
+        audioSource = GetComponent<AudioSource>();
+        isPlayer1 = gameObject.CompareTag("Player1"); // Assuming you have tags to differentiate players
     }
     void Update()
     {
@@ -60,6 +67,14 @@ public class PlayerController : MonoBehaviour
             currentAngle = Mathf.Atan2(shootVelocity.y, shootVelocity.x) * Mathf.Rad2Deg;
             UIUpdate(shootVelocity.magnitude, currentAngle);
             DrawLine(shootVelocity);
+
+            // Play aiming sound
+            if (!audioSource.isPlaying)
+            {
+                AudioClip aimSound = isPlayer1 ? player1AimSound : player2AimSound;
+                audioSource.clip = aimSound;
+                audioSource.Play();
+            }
         }
 
         if (isAiming && Input.GetMouseButtonUp(0))
@@ -70,14 +85,14 @@ public class PlayerController : MonoBehaviour
             isAiming = false;
             shootVelocity = Vector2.zero;
             UIUpdate(0, 0);
+            audioSource.Stop();
         }
     }
     void Shoot(Vector2 shootVelocity)
     {
         GameObject bulletClone = Instantiate(bullet, shootTransform.position, Quaternion.identity);
         Bullet bulletScript = bulletClone.GetComponent<Bullet>();
-        bulletScript.SetOwner(gameObject);
-        bulletScript.velocity = shootVelocity;
+        bulletScript.Initialize(shootVelocity, gameObject);
         CameraController.instance.SetTargetWithProjectileZoom(bulletScript.transform);
         hasShootThisTurn = true;
     }

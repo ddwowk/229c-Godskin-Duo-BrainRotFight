@@ -11,11 +11,14 @@ public class Bullet : MonoBehaviour
     private bool checkEndTurn = false;
     private bool hasCollided = false;
     [SerializeField] float bulletLifeTime;
-
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip projectileSound;
+    [SerializeField] private AudioClip endTurnSound;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     private void Start()
@@ -30,6 +33,11 @@ public class Bullet : MonoBehaviour
         this.time = 0f;
         this.checkEndTurn = false;
         this.hasCollided = false;
+        if (audioSource != null && projectileSound != null)
+        {
+            audioSource.clip = projectileSound;
+            audioSource.Play();
+        }
         Invoke("TimeOutEndTurn", bulletLifeTime);
     }
 
@@ -76,6 +84,11 @@ public class Bullet : MonoBehaviour
         if (!checkEndTurn && GameMenager.instance != null)
         {
             checkEndTurn = true;
+            if (audioSource != null && endTurnSound != null)
+            {
+                audioSource.clip = endTurnSound;
+                audioSource.Play();
+            }
             GameMenager.instance.NotifyEndTurn();
         }
     }
