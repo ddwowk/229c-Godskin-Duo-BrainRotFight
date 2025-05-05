@@ -37,7 +37,6 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= damageToTake;
         currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
 
-        // Play hit sound
         if (audioSource != null && hitSound != null)
         {
             audioSource.clip = hitSound;
@@ -71,43 +70,38 @@ public class PlayerHealth : MonoBehaviour
     }
 
     void Die()
-{
-    if (isDead) return; // Added check to prevent multiple Die() calls
-    isDead = true;
-
-    // Play death sound at current position
-    if (deathSound != null)
     {
-        AudioSource.PlayClipAtPoint(deathSound, transform.position);
-         Debug.Log($"Played death sound for {gameObject.name}"); // Confirm sound play
+        if (isDead) return; 
+        isDead = true;
+
+
+        if (deathSound != null)
+        {
+            AudioSource.PlayClipAtPoint(deathSound, transform.position);
+            Debug.Log($"Played death sound for {gameObject.name}"); 
+        }
+
+        if (GameMenager.instance != null)
+        {
+            Debug.Log($"PlayerHealth ({gameObject.name}): Calling HandlePlayerDeath.");
+            GameMenager.instance.HandlePlayerDeath(gameObject.name, winCanvas, player1, player2, transform.position);
+        }
+        else
+        {
+            Debug.LogError($"PlayerHealth ({gameObject.name}): GameMenager.instance is NULL!");
+
+            PlayerController controller = GetComponent<PlayerController>();
+            if (controller != null) controller.enabled = false;
+
+            Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
+            foreach (Collider2D col in colliders) col.enabled = false;
+        }
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero; 
+            rb.angularVelocity = 0f;
+        }
+        gameObject.SetActive(false);
     }
-
-    // Notify GameManager about player death and handle win UI
-    if (GameMenager.instance != null)
-    {
-        Debug.Log($"PlayerHealth ({gameObject.name}): Calling HandlePlayerDeath."); // <-- ADD THIS LOG
-        GameMenager.instance.HandlePlayerDeath(gameObject.name, winCanvas, player1, player2, transform.position);
-    }
-    else
-    {
-         Debug.LogError($"PlayerHealth ({gameObject.name}): GameMenager.instance is NULL!"); // <-- ADD THIS CHECK
-    }
-
-    // ... (rest of Die method: disable components, SetActive(false)) ...
-     PlayerController controller = GetComponent<PlayerController>();
-    if (controller != null) controller.enabled = false;
-
-    Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
-    foreach (Collider2D col in colliders) col.enabled = false;
-
-    if (rb != null)
-    {
-        rb.linearVelocity = Vector2.zero; // Use velocity
-        rb.angularVelocity = 0f;
-        //rb.simulated = false; // Consider if physics should stop
-    }
-
-    gameObject.SetActive(false);
-}
 
 }

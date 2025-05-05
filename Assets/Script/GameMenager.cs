@@ -72,12 +72,11 @@ public class GameMenager : MonoBehaviour
 
     int alivePlayers = 0;
     PlayerController winningPlayer = null;
-    GameObject dyingPlayer = GameObject.Find(playerName); // Still using Find for now
-
+    GameObject dyingPlayer = GameObject.Find(playerName); 
     if (dyingPlayer == null)
     {
          Debug.LogError($"HandlePlayerDeath: Could not find player GameObject named '{playerName}'.");
-        return; // Exit if player not found
+        return;
     }
 
     foreach (PlayerController pc in playerControllers)
@@ -90,26 +89,23 @@ public class GameMenager : MonoBehaviour
         if (isSelfActive && isNotDyingPlayer)
         {
             alivePlayers++;
-            winningPlayer = pc; // Store the potential winner
+            winningPlayer = pc; 
         }
     }
 
      Debug.Log($"HandlePlayerDeath: Checked players. Alive count (excluding {playerName}): {alivePlayers}. Potential winner: {(winningPlayer != null ? winningPlayer.gameObject.name : "None")}");
 
-    // Check if exactly one player remains AND we identified them
     if (alivePlayers == 1 && winningPlayer != null)
     {
         gameHasEnded = true;
          Debug.Log($"Game Over! Winner is {winningPlayer.gameObject.name}.");
 
-        // Play Music
         if (musicAudioSource != null && winnerMusic != null)
         {
             musicAudioSource.PlayOneShot(winnerMusic);
              Debug.Log("Played winner music.");
         }
 
-        // 1. ACTIVATE THE MAIN CANVAS CONTAINER FIRST!
         if (winCanvas != null)
         {
             winCanvas.SetActive(true);
@@ -119,10 +115,7 @@ public class GameMenager : MonoBehaviour
         {
              Debug.LogWarning($"Main win canvas reference passed from {playerName} was null.");
         }
-
-
-        // 2. Show the appropriate winner UI using TAGS (Recommended)
-        if (winningPlayer.CompareTag("Player1")) // Check winner's tag
+        if (winningPlayer.CompareTag("Player1")) 
         {
             if (player1WinUI != null)
             {
@@ -131,10 +124,10 @@ public class GameMenager : MonoBehaviour
             }
              else { Debug.LogWarning("player1WinUI reference is null in GameManager.");}
 
-            // Ensure other UI is off (optional but safe)
+
             if (player2WinUI != null) player2WinUI.SetActive(false);
         }
-        else if (winningPlayer.CompareTag("Player2")) // Check winner's tag
+        else if (winningPlayer.CompareTag("Player2")) 
         {
             if (player2WinUI != null)
             {
@@ -143,29 +136,12 @@ public class GameMenager : MonoBehaviour
             }
             else { Debug.LogWarning("player2WinUI reference is null in GameManager.");}
 
-            // Ensure other UI is off (optional but safe)
             if (player1WinUI != null) player1WinUI.SetActive(false);
         }
         else
         {
              Debug.LogWarning($"Winning player '{winningPlayer.gameObject.name}' does not have tag 'Player1' or 'Player2'. Cannot activate specific win UI.");
         }
-
-
-        /* // Alternative using passed parameters (Less Recommended)
-        if (winningPlayer.gameObject == player1RefFromDyingPlayer)
-        {
-            if (player1WinUI != null) player1WinUI.SetActive(true);
-        }
-        else if (winningPlayer.gameObject == player2RefFromDyingPlayer)
-        {
-             // Note: This comparison might be tricky. If Player 2 dies, player2RefFromDyingPlayer *is* Player 2.
-             // But the winner is Player 1. You'd need to compare against the correct reference.
-             // Using tags avoids this confusion.
-            if (player2WinUI != null) player2WinUI.SetActive(true);
-        }
-        */
-
     }
      else
      {

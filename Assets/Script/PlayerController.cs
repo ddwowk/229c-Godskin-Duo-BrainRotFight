@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour
         lineRenderer.enabled = false;
         playerUI.SetActive(false);
         audioSource = GetComponent<AudioSource>();
-        isPlayer1 = gameObject.CompareTag("Player1"); // Assuming you have tags to differentiate players
+        isPlayer1 = gameObject.CompareTag("Player1"); 
     }
     void Update()
     {
@@ -67,8 +67,6 @@ public class PlayerController : MonoBehaviour
             currentAngle = Mathf.Atan2(shootVelocity.y, shootVelocity.x) * Mathf.Rad2Deg;
             UIUpdate(shootVelocity.magnitude, currentAngle);
             DrawLine(shootVelocity);
-
-            // Play aiming sound
             if (!audioSource.isPlaying)
             {
                 AudioClip aimSound = isPlayer1 ? player1AimSound : player2AimSound;
