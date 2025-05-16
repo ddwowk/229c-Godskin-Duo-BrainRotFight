@@ -75,7 +75,6 @@ public class GameMenager : MonoBehaviour
     GameObject dyingPlayer = GameObject.Find(playerName); 
     if (dyingPlayer == null)
     {
-         Debug.LogError($"HandlePlayerDeath: Could not find player GameObject named '{playerName}'.");
         return;
     }
 
@@ -93,38 +92,25 @@ public class GameMenager : MonoBehaviour
         }
     }
 
-     Debug.Log($"HandlePlayerDeath: Checked players. Alive count (excluding {playerName}): {alivePlayers}. Potential winner: {(winningPlayer != null ? winningPlayer.gameObject.name : "None")}");
-
     if (alivePlayers == 1 && winningPlayer != null)
     {
         gameHasEnded = true;
-         Debug.Log($"Game Over! Winner is {winningPlayer.gameObject.name}.");
 
         if (musicAudioSource != null && winnerMusic != null)
         {
             musicAudioSource.PlayOneShot(winnerMusic);
-             Debug.Log("Played winner music.");
         }
 
         if (winCanvas != null)
         {
             winCanvas.SetActive(true);
-             Debug.Log($"Activated main win canvas: {winCanvas.name}");
-        }
-        else
-        {
-             Debug.LogWarning($"Main win canvas reference passed from {playerName} was null.");
         }
         if (winningPlayer.CompareTag("Player1")) 
         {
             if (player1WinUI != null)
             {
                 player1WinUI.SetActive(true);
-                 Debug.Log("Activated Player 1 Win UI.");
             }
-             else { Debug.LogWarning("player1WinUI reference is null in GameManager.");}
-
-
             if (player2WinUI != null) player2WinUI.SetActive(false);
         }
         else if (winningPlayer.CompareTag("Player2")) 
@@ -132,21 +118,11 @@ public class GameMenager : MonoBehaviour
             if (player2WinUI != null)
             {
                 player2WinUI.SetActive(true);
-                 Debug.Log("Activated Player 2 Win UI.");
             }
-            else { Debug.LogWarning("player2WinUI reference is null in GameManager.");}
 
             if (player1WinUI != null) player1WinUI.SetActive(false);
         }
-        else
-        {
-             Debug.LogWarning($"Winning player '{winningPlayer.gameObject.name}' does not have tag 'Player1' or 'Player2'. Cannot activate specific win UI.");
-        }
     }
-     else
-     {
-          Debug.Log($"Win condition not met. Alive players: {alivePlayers}. Needs to be 1.");
-     }
 }
     public void NotifyEndTurn()
     {
@@ -171,12 +147,10 @@ public class GameMenager : MonoBehaviour
         int attempts = 0;
         while (playerControllers[nextPlayerTurn] == null || !playerControllers[nextPlayerTurn].gameObject.activeSelf)
         {
-            Debug.Log($"Player {nextPlayerTurn} is inactive, skipping turn.");
             nextPlayerTurn = (nextPlayerTurn + 1) % playerControllers.Count;
             attempts++;
             if (attempts > playerControllers.Count)
             {
-                Debug.LogError("All players seem inactive. Cannot switch turn.");
                 return;
             }
         }

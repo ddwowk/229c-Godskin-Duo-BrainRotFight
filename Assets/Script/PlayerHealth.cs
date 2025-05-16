@@ -78,18 +78,14 @@ public class PlayerHealth : MonoBehaviour
         if (deathSound != null)
         {
             AudioSource.PlayClipAtPoint(deathSound, transform.position);
-            Debug.Log($"Played death sound for {gameObject.name}"); 
         }
 
         if (GameMenager.instance != null)
         {
-            Debug.Log($"PlayerHealth ({gameObject.name}): Calling HandlePlayerDeath.");
             GameMenager.instance.HandlePlayerDeath(gameObject.name, winCanvas, player1, player2, transform.position);
         }
         else
         {
-            Debug.LogError($"PlayerHealth ({gameObject.name}): GameMenager.instance is NULL!");
-
             PlayerController controller = GetComponent<PlayerController>();
             if (controller != null) controller.enabled = false;
 

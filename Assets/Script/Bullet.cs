@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
@@ -14,13 +15,44 @@ public class Bullet : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip projectileSound;
     [SerializeField] private AudioClip endTurnSound;
-
+    [SerializeField] float explosionRadius = 1.5f;
+    [SerializeField] Tilemap destructibleTilemap;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         audioSource = GetComponent<AudioSource>();
     }
+    public void Explode()
+    {
+        //if (explosionEffectPrefab != null)
+        //{
+        //    Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+        //}
+        GameObject tilemapObject = GameObject.Find("Grid");
+        destructibleTilemap = tilemapObject.transform.Find("Ground").GetComponent<Tilemap>();
+        Vector3 explosionCenter = transform.position;
+        int radiusInCells = Mathf.CeilToInt(explosionRadius / destructibleTilemap.cellSize.x);
 
+        Vector3Int centerCell = destructibleTilemap.WorldToCell(explosionCenter);
+
+        for (int x = -radiusInCells; x <= radiusInCells; x++)
+        {
+            for (int y = -radiusInCells; y <= radiusInCells; y++)
+            {
+                Vector3Int currentCell = new Vector3Int(centerCell.x + x, centerCell.y + y, centerCell.z);
+                Vector3 cellWorldCenter = destructibleTilemap.GetCellCenterWorld(currentCell);
+                float distanceToCenter = Vector2.Distance(new Vector2(explosionCenter.x, explosionCenter.y), new Vector2(cellWorldCenter.x, cellWorldCenter.y));
+
+                if (distanceToCenter <= explosionRadius)
+                {
+                    if (destructibleTilemap.GetTile(currentCell) != null)
+                    {
+                        destructibleTilemap.SetTile(currentCell, null);
+                    }
+                }
+            }
+        }
+    }
     private void Start()
     {
         Invoke("TimeOutEndTurn", bulletLifeTime);
@@ -58,7 +90,7 @@ public class Bullet : MonoBehaviour
     Vector2 Projectile(float time)
     {
         float distanceX = velocity.x * time;
-        float distanceY = velocity.y * time + 0.5f * Physics2D.gravity.y * time * time;
+        float distanceY = velocity.y - Mathf.Abs(Physics2D.gravity.y) * time;
         return new Vector2(distanceX, distanceY);
     }
 
@@ -99,16 +131,17 @@ public class Bullet : MonoBehaviour
 
         Vector2 impactVelocity = rb != null ? rb.linearVelocity : Vector2.zero;
 
-        PlayerHealth targetHealth = collision.transform.parent?.GetChild(0).GetComponent<PlayerHealth>();
+        PlayerHealth targetHealth = collision.gameObject.GetComponent<PlayerHealth>();
+        if (targetHealth == owner) return;
 
         if (targetHealth != null && (owner == null || targetHealth.gameObject != owner))
         {
-            bool isHeadshot = collision.gameObject.CompareTag("PlayerHead");
-            bool isBodyShot = collision.gameObject.CompareTag("PlayerBody");
+            bool isHeadshot = collision.collider.CompareTag("PlayerHead");
+            bool isBodyShot = collision.collider.CompareTag("PlayerBody");
 
             if (isHeadshot || isBodyShot)
             {
-                Debug.Log("Hit");
+                Debug.Log($"Hit {isHeadshot}");
                 hasCollided = true;
                 targetHealth.TakeDamage( isHeadshot, impactVelocity);
 
@@ -137,5 +170,6 @@ public class Bullet : MonoBehaviour
             Invoke("EndTurn", 1.5f);
             Destroy(gameObject, 1.5f);
         }
+        Explode();
     }
 }
